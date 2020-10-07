@@ -96,3 +96,8 @@ def test_incorrect_scopes2(tmp_path, monkeypatch, capsys):
     main.main(['a.txt'])
     assert open('a.txt.out', 'r').read() == 'Syntax error: line 3, colon 12\n'
 
+def test_incorrect_atom(tmp_path, monkeypatch, capsys):
+    (tmp_path / 'a.txt').write_text('(b) :- g.\n t () :- g. \n(a (b a)) .')
+    monkeypatch.chdir(tmp_path)
+    main.main(['a.txt'])
+    assert open('a.txt.out', 'r').read() == 'Syntax error: line 1, colon 0\nSyntax error: line 2, colon 4\nSyntax error: line 3, colon 0\n'
