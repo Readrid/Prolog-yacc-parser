@@ -88,7 +88,7 @@ class Parser(object):
                 try:
                     output = output + self.parser.parse(tok) + '\n'
                 except:
-                    print(f'Syntax error: line {linecount}, colon WTF')
+                    print(f'Syntax error: line {linecount}')
                     err = True
 
         if err: return False
