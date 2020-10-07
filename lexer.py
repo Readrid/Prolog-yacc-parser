@@ -23,7 +23,11 @@ class LexerLog(object):
     t_DISJ = r';'
     t_CONJ = r','
 
-    t_ignore = ' \t\n'
+    t_ignore = ' \t'
+
+    def t_newline(self, t): 
+        r'\n+'
+        t.lexer.lineno += len(t.value)
 
     def t_error(self, t): 
         print("Illegal character '%s'" % t.value[0])

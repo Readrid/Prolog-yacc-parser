@@ -11,35 +11,31 @@ class Parser(object):
     tokens = LexerLog.tokens
 
     def p_relation(self, p):
-        '''relation : atomexpr CORKSCREW disjunction DOT
-                    | atomexpr DOT'''
+        '''relation : atom CORKSCREW disjunction DOT
+                    | atom DOT'''
         if len(p) == 5:
             p[0] = f'REL ({p[1]}) ({p[3]})'
         else:
             p[0] = f'REL ({p[1]})'
 
-    def p_atombody(self, p):
-        '''atombody : ID atom'''
-        p[0] = f'ATOMBODY (ID {p[1]}) ({p[2]})'
-
-    def p_atomexpr_id(self, p):
-        '''atomexpr : ID'''
-        p[0] = f'ATOMEXPR (ID {p[1]})'
-
-    def p_atomexpr_body(self, p):
-        '''atomexpr : atombody'''
-        p[0] = f'ATOMEXPR ({p[1]})'
-
     def p_atom(self, p):
-        '''atom : atomexpr 
-                | LPAREN atombody RPAREN
-                | LPAREN atombody RPAREN atom'''
+        '''atom : ID
+                | ID atomseq'''
         if len(p) == 2:
-            p[0] = f'ATOM ({p[1]})'
-        elif len(p) == 4:
-            p[0] = f'ATOM ({p[2]})'
+            p[0] = f'ID {p[1]}'
         else:
-            p[0] = f'ATOM (({p[2]}) {p[4]})'
+            p[0] = f'ATOM (ID {p[1]}) ({p[2]})'
+
+    def p_atomseq(self, p):
+        '''atomseq : atom
+                   | LPAREN atomseq RPAREN
+                   | LPAREN atomseq RPAREN atomseq'''
+        if len(p) == 2:
+            p[0] = f'ATOMSEQ ({p[1]})'
+        elif len(p) == 4:
+            p[0] = f'ATOMSEQ ({p[2]})'
+        else:
+            p[0] = f'ATOMSEQ ({p[2]}) ({p[4]})'
 
     def p_disjunction(self, p):
         '''disjunction : conjunction 
@@ -66,7 +62,7 @@ class Parser(object):
             p[0] = f'({p[2]})'
 
     def p_error(self, p):
-        raise SyntaxError
+        raise SyntaxError(p)
 
     def parse(self, fileName):
         with open(fileName, 'r') as inputFile:
@@ -79,16 +75,20 @@ class Parser(object):
         with open(fileName + '.out', 'w') as outputFile:
             sys.stdout = outputFile
             output = ""
-            linecount = 1
             err = False
+            lines = 1
             for tok in relations:
-                linecount += tok.count("\n")
+                lines += tok.count('\n')
                 if tok.strip() == '':
                     continue
                 try:
-                    output = output + self.parser.parse(tok) + '\n'
-                except:
-                    print(f'Syntax error: line {linecount}')
+                    output = output + self.parser.parse(tok, lexer=self.lex.lexer) + '\n'
+                except SyntaxError as ex:
+                    if not ex.args[0]:
+                        col = "EOF"
+                    else:
+                        col = ex.args[0].lexpos - len(ex.args[0].value) - tok.rfind('\n', 0, ex.args[0].lexpos)
+                    print(f'Syntax error: line {lines}, colon {col}')
                     err = True
 
         if err: return False
