@@ -4,8 +4,8 @@ import sys
 from parser import Parser
 
 def main(args_str: List[str]):
-    p = Parser(args_str[0])
-    p.parse()
+    p = Parser()
+    p.parse(args_str[0])
 
 
 if __name__ == '__main__':
