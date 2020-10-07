@@ -1,4 +1,4 @@
-# Prolog yacc parser
+# Prolog parsing with yacc
 
 Run parser:
 ```
