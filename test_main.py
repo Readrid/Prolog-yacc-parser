@@ -4,48 +4,47 @@ def test_tree_simple(tmp_path, tmpdir, monkeypatch, capsys):
     (tmp_path / 'a.txt').write_text('F :- f.')
     monkeypatch.chdir(tmp_path)
     main.main(['a.txt'])
-    assert open('a.txt.out', 'r').read() == 'REL (ID F) (ID f)\n'
+    assert open('a.txt.out', 'r').read() == 'REL (ID F) (VAR (ID f))\n'
 
 def test_tree_atom_scopes(tmp_path, monkeypatch, capsys):
     (tmp_path / 'a.txt').write_text('F (cons H) p:- f.')
     monkeypatch.chdir(tmp_path)
     main.main(['a.txt'])
-    assert open('a.txt.out', 'r').read() == "REL (ATOM (ID F) (ATOMSEQ (ATOMSEQ (ATOM (ID cons) (ATOMSEQ (ID H)))) (ATOMSEQ (ID p)))) (ID f)\n"
+    assert open('a.txt.out', 'r').read() == "REL (ATOM (ID F) (ATOMSEQ (ATOMBODY (ATOM (ID cons) (ATOMSEQ (ID H)))) (ATOMBODY (ID p)))) (VAR (ID f))\n"
 
 def test_tree_atom_concat(tmp_path, monkeypatch, capsys):
     (tmp_path / 'a.txt').write_text('F g t:- f.')
     monkeypatch.chdir(tmp_path)
     main.main(['a.txt'])
-    assert open('a.txt.out', 'r').read() == 'REL (ATOM (ID F) (ATOMSEQ (ATOM (ID g) (ATOMSEQ (ID t))))) (ID f)\n'
+    assert open('a.txt.out', 'r').read() == 'REL (ATOM (ID F) (ATOMSEQ (ATOM (ID g) (ATOMSEQ (ID t))))) (VAR (ID f))\n'
 
 def test_tree_expr_simple(tmp_path, monkeypatch, capsys):
     (tmp_path / 'a.txt').write_text('F :- t , j ; l.')
     monkeypatch.chdir(tmp_path)
     main.main(['a.txt'])
-    assert open('a.txt.out', 'r').read() == 'REL (ID F) (DISJ (CONJ (ID t ID j) ID l))\n'
+    assert open('a.txt.out', 'r').read() == 'REL (ID F) (DISJ (CONJ (VAR (ID t) VAR (ID j)) VAR (ID l)))\n'
 
 def test_tree_expr_scopes(tmp_path, monkeypatch, capsys):
     (tmp_path / 'a.txt').write_text('F :- t , ((j ; l) , r).')
     monkeypatch.chdir(tmp_path)
     main.main(['a.txt'])
-    assert open('a.txt.out', 'r').read() == 'REL (ID F) (CONJ (ID t (CONJ ((DISJ (ID j ID l)) ID r))))\n'
+    assert open('a.txt.out', 'r').read() == 'REL (ID F) (CONJ (VAR (ID t) VAR (CONJ (VAR (DISJ (VAR (ID j) VAR (ID l))) VAR (ID r)))))\n'
 
-def test_tree_three_simple_lines(tmp_path, monkeypatch, capsys):
-    (tmp_path / 'a.txt').write_text('F :- t.\n G (p g).\n K :- t;l.')
+def test_tree_two_simple_lines(tmp_path, monkeypatch, capsys):
+    (tmp_path / 'a.txt').write_text('G (p g).\n K :- (p (b a)) , (a b).')
     monkeypatch.chdir(tmp_path)
     main.main(['a.txt'])
-    tree1 = "REL (ID F) (ID t)\n"
-    tree2 = "REL (ATOM (ID G) (ATOMSEQ (ATOMSEQ (ATOM (ID p) (ATOMSEQ (ID g))))))\n"
-    tree3 = "REL (ID K) (DISJ (ID t ID l))\n"
-    assert open('a.txt.out', 'r').read() == tree1 + tree2 + tree3
+    tree1 = "REL (ATOM (ID G) (ATOMSEQ (ATOMBODY (ATOM (ID p) (ATOMSEQ (ID g))))))\n"
+    tree2 = "REL (ID K) (CONJ (VAR (VAR (ATOM (ID p) (ATOMSEQ (ATOMBODY (ATOM (ID b) (ATOMSEQ (ID a))))))) VAR (VAR (ATOM (ID a) (ATOMSEQ (ID b))))))\n"
+    assert open('a.txt.out', 'r').read() == tree1 + tree2
 
-def test_tree_three_lines_with_scopes(tmp_path, monkeypatch, capsys):
-    (tmp_path / 'a.txt').write_text('fr (b) :- f.\nreg (((b))) :- r.\nre ((a) b) :- e.\n')
+def test_tree_three_rel_with_scopes(tmp_path, monkeypatch, capsys):
+    (tmp_path / 'a.txt').write_text('fr (b) :- f.\nreg (((b))) :- r.\nf :- (a b) ,\n (c d).')
     monkeypatch.chdir(tmp_path)
     main.main(['a.txt'])
-    tree1 = "REL (ATOM (ID fr) (ATOMSEQ (ATOMSEQ (ID b)))) (ID f)\n"
-    tree2 = "REL (ATOM (ID reg) (ATOMSEQ (ATOMSEQ (ATOMSEQ (ATOMSEQ (ID b)))))) (ID r)\n"
-    tree3 = "REL (ATOM (ID re) (ATOMSEQ (ATOMSEQ (ATOMSEQ (ID a)) (ATOMSEQ (ID b))))) (ID e)\n"
+    tree1 = "REL (ATOM (ID fr) (ATOMSEQ (ATOMBODY (ID b)))) (VAR (ID f))\n"
+    tree2 = "REL (ATOM (ID reg) (ATOMSEQ (ATOMBODY (ATOMBODY (ATOMBODY (ID b)))))) (VAR (ID r))\n"
+    tree3 = "REL (ID f) (CONJ (VAR (VAR (ATOM (ID a) (ATOMSEQ (ID b)))) VAR (VAR (ATOM (ID c) (ATOMSEQ (ID d))))))\n"
     assert open('a.txt.out', 'r').read() == tree1 + tree2 + tree3
 
 def test_incorrect_without_dot(tmp_path, monkeypatch, capsys):

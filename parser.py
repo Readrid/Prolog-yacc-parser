@@ -21,7 +21,10 @@ class Parser(object):
     def p_atom(self, p):
         '''atom : ID 
                 | ID atomseq'''
-        p[0] = f'ID {p[1]}'
+        if len(p) == 2:
+            p[0] = f'ID {p[1]}'
+        else:
+            p[0] = f'ATOM (ID {p[1]}) ({p[2]})'
 
     def p_atomseq(self, p):
         '''atomseq : atom
