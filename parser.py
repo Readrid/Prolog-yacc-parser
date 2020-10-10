@@ -19,23 +19,28 @@ class Parser(object):
             p[0] = f'REL ({p[1]})'
 
     def p_atom(self, p):
-        '''atom : ID
+        '''atom : ID 
                 | ID atomseq'''
-        if len(p) == 2:
-            p[0] = f'ID {p[1]}'
-        else:
-            p[0] = f'ATOM (ID {p[1]}) ({p[2]})'
+        p[0] = f'ID {p[1]}'
 
     def p_atomseq(self, p):
         '''atomseq : atom
-                   | LPAREN atomseq RPAREN
-                   | LPAREN atomseq RPAREN atomseq'''
+                   | LPAREN atombody RPAREN
+                   | LPAREN atombody RPAREN atombody'''
         if len(p) == 2:
             p[0] = f'ATOMSEQ ({p[1]})'
         elif len(p) == 4:
             p[0] = f'ATOMSEQ ({p[2]})'
         else:
             p[0] = f'ATOMSEQ ({p[2]}) ({p[4]})'
+
+    def p_atombody(self, p):
+        '''atombody : atom 
+                    | LPAREN atombody RPAREN'''
+        if len(p) == 2:
+            p[0] = f'ATOMBODY ({p[1]})'
+        else:
+            p[0] = f'ATOMBODY ({p[2]})'
 
     def p_disjunction(self, p):
         '''disjunction : conjunction 
@@ -46,20 +51,20 @@ class Parser(object):
             p[0] = f'DISJ ({p[1]} {p[3]})'
 
     def p_conjunction(self, p):
-        '''conjunction : identifier
-                       | identifier CONJ conjunction'''
+        '''conjunction : var
+                       | var CONJ conjunction'''
         if len(p) == 2:
             p[0] = p[1]
         else:
             p[0] = f'CONJ ({p[1]} {p[3]})'
 
-    def p_identifier(self, p):
-        '''identifier : ID
-                      | LPAREN disjunction RPAREN'''
+    def p_var(self, p):
+        '''var : atom
+               | LPAREN disjunction RPAREN'''
         if len(p) == 2:
-            p[0] = f'ID {p[1]}'
+            p[0] = f'VAR ({p[1]})'
         else:
-            p[0] = f'({p[2]})'
+            p[0] = f'VAR ({p[2]})'
 
     def p_error(self, p):
         raise SyntaxError(p)
