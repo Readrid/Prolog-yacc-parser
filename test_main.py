@@ -100,3 +100,9 @@ def test_incorrect_atom(tmp_path, monkeypatch, capsys):
     monkeypatch.chdir(tmp_path)
     main.main(['a.txt'])
     assert open('a.txt.out', 'r').read() == 'Syntax error: line 1, colon 0\nSyntax error: line 2, colon 4\nSyntax error: line 3, colon 0\n'
+
+def test_illegal_character(tmp_path, monkeypatch, capsys):
+    (tmp_path / 'a.txt').write_text('f : - f.\nf :- /')
+    monkeypatch.chdir(tmp_path)
+    main.main(['a.txt'])
+    assert open('a.txt.out', 'r').read() == 'Syntax error: line 1, colon 2\nSyntax error: line 2, colon 5\n'

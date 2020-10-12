@@ -30,8 +30,8 @@ class LexerLog(object):
         t.lexer.lineno += len(t.value)
 
     def t_error(self, t): 
-        print("Illegal character '%s'" % t.value[0])
-        t.lexer.skip(1)
+        t.value = t.value[0]
+        raise SyntaxError(t)
 
     def test(self, data):
         self.lexer.input(data)
